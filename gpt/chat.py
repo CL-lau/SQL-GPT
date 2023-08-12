@@ -20,8 +20,6 @@ class ChatGPT(nn.Module):
         self.MAX_TOKEN = 8000
         openai.api_key = OPENAI_API_KEY
         openai.api_base = OPENAI_API_BASE
-        openai.api_key = "1664539549952901140"
-        openai.api_base = "https://aigc.sankuai.com/v1/openai/native"
 
     def chat(self, questions, system_assistant=None, assistant=None, temperature=None, need_stream=False):
         messages = []
