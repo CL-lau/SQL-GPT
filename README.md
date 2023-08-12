@@ -52,4 +52,5 @@ SELECT * FROM users WHERE age > 25;
 ```
 
 ## Star History
-[![Star History Chart](https://star-history.com/#CL-lau/SQL-GPT&Date)](https://star-history.com/#CL-lau/GPT-Java&Date)
+
+[![Star History Chart](https://api.star-history.com/svg?repos=CL-lau/SQL-GPT&type=Date)](https://star-history.com/#CL-lau/SQL-GPT&Date)
