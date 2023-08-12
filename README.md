@@ -49,3 +49,7 @@ SQL_GPT 是一个强大的工具，通过文字描述自动生成 SQL 查询语�
 **生成的 SQL 查询：**
 ```sql
 SELECT * FROM users WHERE age > 25;
+```
+
+## Star History
+[![Star History Chart](https://star-history.com/#CL-lau/SQL-GPT&Date)](https://star-history.com/#CL-lau/GPT-Java&Date)
