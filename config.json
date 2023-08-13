@@ -1,0 +1,10 @@
+{
+    "openai": {
+        "app_key": "YOUR_OPENAI_APP_KEY",
+        "url_base": "https://api.openai.com/v1"
+    },
+    "proxy": {
+        "address": "proxy.example.com",
+        "port": "8080"
+    }
+}

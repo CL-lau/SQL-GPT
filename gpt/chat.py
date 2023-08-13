@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import openai
@@ -10,16 +11,42 @@ logging.basicConfig(format='%(asctime)s - %(levelname)s - %(module)s - %(message
 class ChatGPT(nn.Module):
     def __init__(self, OPENAI_API_KEY=None, OPENAI_API_BASE=None, MODEL_TYPE="gpt-3.5-turbo"):
         super().__init__()
+        self.config_file = "config.json"
+        self.initConfig()
         if OPENAI_API_KEY is None or OPENAI_API_KEY == '':
             OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+            openai.api_key = OPENAI_API_KEY
         if OPENAI_API_BASE is None or OPENAI_API_BASE == '':
             OPENAI_API_BASE = os.environ.get("OPENAI_API_BASE")
+            if OPENAI_API_BASE is not None:
+                openai.api_base = OPENAI_API_BASE
         self.OPENAI_API_KEY = OPENAI_API_KEY
         self.OPENAI_API_BASE = OPENAI_API_BASE
         self.MODEL_TYPE = MODEL_TYPE
         self.MAX_TOKEN = 8000
-        openai.api_key = OPENAI_API_KEY
-        openai.api_base = OPENAI_API_BASE
+
+    def initConfig(self):
+        if os.path.exists(self.config_file):
+            with open(self.config_file, 'r') as config_file:
+                config = json.load(config_file)
+            openai_config = config['openai']
+            proxy_config = config['proxy']
+
+            openai_app_key = openai_config['app_key']
+            openai_url_base = openai_config['url_base']
+
+            proxy_address = proxy_config['address']
+            proxy_port = proxy_config['port']
+            if openai_app_key is not None and openai_app_key != "":
+                openai.api_base = openai_app_key
+                self.OPENAI_API_KEY = openai_app_key
+            if openai_url_base is not None and openai_url_base != "":
+                openai.api_base = openai_url_base
+                self.OPENAI_API_BASE = openai_url_base
+            if proxy_address is not None and proxy_address != "" and proxy_port is not None and proxy_port != "":
+                os.environ['http_proxy'] = f'http://{proxy_address}:{proxy_port}'
+                os.environ['https_proxy'] = f'http://{proxy_address}:{proxy_port}'
+
 
     def chat(self, questions, system_assistant=None, assistant=None, temperature=None, need_stream=False):
         messages = []
