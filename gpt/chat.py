@@ -12,18 +12,25 @@ class ChatGPT(nn.Module):
     def __init__(self, OPENAI_API_KEY=None, OPENAI_API_BASE=None, MODEL_TYPE="gpt-3.5-turbo"):
         super().__init__()
         self.config_file = "config.json"
-        self.initConfig()
+        self.app_keys = []
         if OPENAI_API_KEY is None or OPENAI_API_KEY == '':
             OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
-            openai.api_key = OPENAI_API_KEY
+            if OPENAI_API_KEY is not None and OPENAI_API_KEY != "":
+                openai.api_key = OPENAI_API_KEY
+            self.OPENAI_API_KEY = OPENAI_API_KEY
         if OPENAI_API_BASE is None or OPENAI_API_BASE == '':
             OPENAI_API_BASE = os.environ.get("OPENAI_API_BASE")
-            if OPENAI_API_BASE is not None:
+            if OPENAI_API_BASE is not None and OPENAI_API_BASE != "":
                 openai.api_base = OPENAI_API_BASE
+                self.OPENAI_API_BASE = OPENAI_API_BASE
         self.OPENAI_API_KEY = OPENAI_API_KEY
         self.OPENAI_API_BASE = OPENAI_API_BASE
         self.MODEL_TYPE = MODEL_TYPE
         self.MAX_TOKEN = 8000
+
+        self.initConfig()
+        if self.OPENAI_API_KEY is None and len(self.app_keys) > 0:
+            self.find_valid_key()
 
     def initConfig(self):
         if os.path.exists(self.config_file):
@@ -34,6 +41,8 @@ class ChatGPT(nn.Module):
 
             openai_app_key = openai_config['app_key']
             openai_url_base = openai_config['url_base']
+            openai_app_keys = openai_config['app_keys']
+            model_type = openai_config['model_type']
 
             proxy_address = proxy_config['address']
             proxy_port = proxy_config['port']
@@ -43,37 +52,83 @@ class ChatGPT(nn.Module):
             if openai_url_base is not None and openai_url_base != "":
                 openai.api_base = openai_url_base
                 self.OPENAI_API_BASE = openai_url_base
+            if openai_app_keys is not None and len(openai_app_keys) > 0:
+                for key in openai_app_keys:
+                    self.app_keys.append(key)
+            if model_type is not None and model_type != "":
+                self.MODEL_TYPE = model_type
             if proxy_address is not None and proxy_address != "" and proxy_port is not None and proxy_port != "":
                 os.environ['http_proxy'] = f'http://{proxy_address}:{proxy_port}'
                 os.environ['https_proxy'] = f'http://{proxy_address}:{proxy_port}'
 
+    def find_valid_key(self):
+        for key in self.app_keys:
+            openai.api_key = key
+            try:
+                openai.ChatCompletion.create(model=self.MODEL_TYPE,
+                                             messages=[
+                                                 {"role": "system",
+                                                  "content": "You are a helpful assistant."}
+                                             ])
+                self.app_keys.remove(key)
+                self.app_keys.insert(0, key)
+                return key
+            except openai.error.AuthenticationError:
+                logging.info(f"Key {key} is not valid.")
+            except openai.error.OpenAIError as e:
+                logging.info(f"Error while testing key {key}: {e}")
+        logging.error("No valid keys found.")
+        return None
 
     def chat(self, questions, system_assistant=None, assistant=None, temperature=None, need_stream=False):
-        messages = []
-        if system_assistant is not None:
-            messages.append({"role": "system", "content": system_assistant})
-        if assistant is not None:
-            messages.append({"role": "assistant", "content": assistant})
-        if isinstance(questions, list):
-            for index, question in enumerate(questions):
-                messages.append({"role": "user", "content": question})
-        if isinstance(questions, str):
-            messages.append({"role": "user", "content": questions})
-        print(messages)
-        if temperature is None:
-            response = openai.ChatCompletion.create(
-                model=self.MODEL_TYPE,
-                messages=messages,
-            )
-        else:
-            if isinstance(temperature, float):
+        try:
+            messages = []
+            if system_assistant is not None:
+                messages.append({"role": "system", "content": system_assistant})
+            if assistant is not None:
+                messages.append({"role": "assistant", "content": assistant})
+            if isinstance(questions, list):
+                for index, question in enumerate(questions):
+                    messages.append({"role": "user", "content": question})
+            if isinstance(questions, str):
+                messages.append({"role": "user", "content": questions})
+            response = None
+            if temperature is None:
                 response = openai.ChatCompletion.create(
                     model=self.MODEL_TYPE,
                     messages=messages,
-                    temperature=temperature,
                 )
-        result = self.processResponse(response)
-        return result
+            else:
+                if isinstance(temperature, float):
+                    response = openai.ChatCompletion.create(
+                        model=self.MODEL_TYPE,
+                        messages=messages,
+                        temperature=temperature,
+                    )
+            result = self.processResponse(response)
+            return result
+        except openai.error.AuthenticationError:
+            if len(self.app_keys) > 0:
+                available_key = self.find_valid_key()
+                openai.api_key = self.app_keys[0]
+                self.OPENAI_API_KEY = self.app_keys[0]
+                self.chat(questions, system_assistant, assistant, temperature, need_stream)
+                if available_key is None:
+                    return ""
+            else:
+                logging.error("No valid keys found.")
+                return ""
+        except openai.error.OpenAIError as e:
+            if len(self.app_keys) > 0:
+                available_key = self.find_valid_key()
+                openai.api_key = self.app_keys[0]
+                self.OPENAI_API_KEY = self.app_keys[0]
+                self.chat(questions, system_assistant, assistant, temperature, need_stream)
+                if available_key is None:
+                    return ""
+            else:
+                logging.error("No valid keys found.")
+                return ""
 
     def processResponse(self, response):
         """
