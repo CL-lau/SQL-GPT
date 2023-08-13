@@ -1,7 +1,8 @@
 {
     "openai": {
         "app_key": "YOUR_OPENAI_APP_KEY",
-        "url_base": "https://api.openai.com/v1"
+        "url_base": "https://api.openai.com/v1",
+        "app_keys": []
     },
     "proxy": {
         "address": "proxy.example.com",
