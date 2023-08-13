@@ -1,5 +1,7 @@
 # import logger.logger as logging
+import json
 import logging
+import os
 import re
 import time
 
@@ -10,28 +12,49 @@ from sqlalchemy import create_engine, text, inspect
 from sql.SQL_type import get_db_operation_class, SQL_class
 
 
-# from sql.SQL_class import
-
-
 class SQL_operator(nn.Module):
     def __init__(self, jdbcList=None, userNames=None, passwords=None):
         super().__init__()
+
         self.jdbcList = jdbcList
         if self.jdbcList is None or len(self.jdbcList) <= 0:
             self.jdbcList = []
         self.userNames = userNames
+        if self.userNames is None or len(self.userNames) <= 0:
+            self.userNames = []
         self.passwords = passwords
+        if self.passwords is None or len(self.passwords) <= 0:
+            self.passwords = []
+
         self.tableList = {}
         self.columnsList = {}
         self.connMap = {}
+
+        self.config_file = "config.json"
+        self.initJDBC()
         self.get_table_columns()
         self.sql_class = SQL_class()
+
+    def initJDBC(self):
+        if os.path.exists(self.config_file):
+            with open(self.config_file, 'r') as config_file:
+                config = json.load(config_file)
+            jdbc_s = config['jdbc']
+            for jdbc in jdbc_s:
+                host = jdbc['host']
+                db = jdbc['db']
+                name = jdbc['name']
+                password = jdbc['password']
+                self.jdbcList.append(host + '/' + db)
+                self.userNames.append(name)
+                self.passwords.append(password)
+                self.connMap[host + '/' + db] = create_engine('mysql+pymysql://' + name + ':' + password + '@' + jdbc)
 
     def get_table_columns(self):
         for jdbc in self.jdbcList:
             # self.connMap[jdbc] = create_engine('mysql+pymysql://root:password@localhost/test_db')
-            self.connMap[jdbc] = create_engine('mysql+pymysql://' + self.userNames + ':' +
-                                               self.passwords + '@' + jdbc)
+            # self.connMap[jdbc] = create_engine('mysql+pymysql://' + self.userNames + ':' +
+            #                                    self.passwords + '@' + jdbc)
             inspector = inspect(self.connMap[jdbc])
             tables = inspector.get_table_names()
             self.tableList[jdbc] = [table for table in tables]
