@@ -17,7 +17,6 @@ SQL_GPT 是一款强大的工具，它能够通过简单的文字描述，自动
 - [x] **Java持久层SQL语句生成：** 结合SQL以及数据库结构信息来自动生成Java持久层语句，如：```Mybatis```。
 - [x] **多轮对话：** 通过多轮对话的方式来实现对生成SQL的不断优化。
 - [ ] **数据自动可视化分析：** 在通过数据库操作完数据之后，通过对数据进行分析来展示数据的基础信息。
-- [ ] **SQL表结构填充：** 通过数据库的结构信息对SQL语句进行自动填充。
 
 ## 快速开始指南
 
@@ -45,6 +44,7 @@ SQL_GPT 是一款强大的工具，它能够通过简单的文字描述，自动
    sql_GPT.SQL_ERROR_CHECK("SELECT * FROM tableA WHERE user_id IN (SELECT user_id FROM tableB LIMIT 1000);", "SQL执行失败: (1235, This version of MySQL doesn't yet support 'LIMIT & IN/ALL/ANY/SOME subquery'")
    ```
 
-## Star 历史
+## Star历史
 
+>>>>>>> origin/main
 [![Star History Chart](https://api.star-history.com/svg?repos=CL-lau/SQL-GPT&type=Date)](https://star-history.com/#CL-lau/SQL-GPT&Date)
