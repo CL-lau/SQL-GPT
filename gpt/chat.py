@@ -27,6 +27,7 @@ class ChatGPT(nn.Module):
         self.OPENAI_API_BASE = OPENAI_API_BASE
         self.MODEL_TYPE = MODEL_TYPE
         self.MAX_TOKEN = 8000
+        self.contextual_conversations = []
 
         self.initConfig()
         if self.OPENAI_API_KEY is None and len(self.app_keys) > 0:
@@ -125,6 +126,60 @@ class ChatGPT(nn.Module):
                 self.OPENAI_API_KEY = self.app_keys[0]
                 self.chat(questions, system_assistant, assistant, temperature, need_stream)
                 if available_key is None:
+                    return ""
+            else:
+                logging.error("No valid keys found.")
+                return ""
+
+    def contextual_chat(self, questions, system_assistant=None, assistant=None, temperature=None, need_stream=False):
+        try:
+            if system_assistant is not None:
+                self.contextual_conversations.append({"role": "system", "content": system_assistant})
+            if assistant is not None:
+                self.contextual_conversations.append({"role": "assistant", "content": assistant})
+            if isinstance(questions, list):
+                for index, question in enumerate(questions):
+                    self.contextual_conversations.append({"role": "user", "content": question})
+            if isinstance(questions, str):
+                self.contextual_conversations.append({"role": "user", "content": questions})
+            response = None
+            if temperature is None:
+                response = openai.ChatCompletion.create(
+                    model=self.MODEL_TYPE,
+                    messages=self.contextual_conversations,
+                )
+            else:
+                if isinstance(temperature, float):
+                    response = openai.ChatCompletion.create(
+                        model=self.MODEL_TYPE,
+                        messages=self.contextual_conversations,
+                        temperature=temperature,
+                    )
+            result = self.processResponse(response)
+            self.contextual_conversations.append({"role": "assistant", "content": result})
+            if self.num_tokens_from_messages(self.contextual_conversations) > self.MAX_TOKEN:
+                self.contextual_conversations = []
+            return result
+        except openai.error.AuthenticationError:
+            if len(self.app_keys) > 0:
+                available_key = self.find_valid_key()
+                openai.api_key = self.app_keys[0]
+                self.OPENAI_API_KEY = self.app_keys[0]
+                self.chat([], None, None, None, False)
+                if available_key is None:
+                    logging.error("No valid keys found in app key list.")
+                    return ""
+            else:
+                logging.error("No valid keys found.")
+                return ""
+        except openai.error.OpenAIError as e:
+            if len(self.app_keys) > 0:
+                available_key = self.find_valid_key()
+                openai.api_key = self.app_keys[0]
+                self.OPENAI_API_KEY = self.app_keys[0]
+                self.chat([], None, None, None, False)
+                if available_key is None:
+                    logging.error("No valid keys found.")
                     return ""
             else:
                 logging.error("No valid keys found.")
