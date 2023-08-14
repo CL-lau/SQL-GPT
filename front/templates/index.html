@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Management Tool</title>
+    <!-- 添加Bootstrap样式链接 -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- 添加自定义样式 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-4">Database Management Tool</h1>
+        <form class="mt-4" method="post">
+            <div class="form-group">
+                <label for="action">选择操作：</label>
+                <select id="action" name="action" class="form-control">
+                    <option value="generate">生成SQL查询</option>
+                    <option value="optimize">优化SQL查询</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="description">描述：</label>
+                <input type="text" id="description" name="description" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="sql_query">SQL查询：</label>
+                <input type="text" id="sql_query" name="sql_query" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="database_structure">数据库结构：</label>
+                <textarea id="database_structure" name="database_structure" class="form-control"></textarea>
+            </div>
+            <button type="button" id="submitBtn" class="btn btn-primary">提交</button>
+            <div class="btn-group ml-2" role="group">
+                <button type="button" class="btn btn-secondary" id="toggleAutocomplete">切换自动补全</button>
+            </div>
+        </form>
+        <div class="result mt-4">
+            <h2>结果：</h2>
+            <p id="resultText"></p>
+        </div>
+    </div>
+
+    <!-- 添加Bootstrap和jQuery脚本链接 -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- 添加自定义JavaScript -->
+    <script>
+        // 自动补全切换按钮事件
+        document.getElementById('toggleAutocomplete').addEventListener('click', function() {
+            var inputFields = document.querySelectorAll('input, textarea');
+            inputFields.forEach(function(input) {
+                input.toggleAttribute('autocomplete');
+            });
+        });
+
+        // 提交按钮事件
+        document.getElementById('submitBtn').addEventListener('click', function() {
+            var action = document.getElementById('action').value;
+            var description = document.getElementById('description').value;
+            var sqlQuery = document.getElementById('sql_query').value;
+            var databaseStructure = document.getElementById('database_structure').value;
+
+            if (action === 'generate') {
+                generateQuery(description);
+            } else if (action === 'optimize') {
+                optimizeQuery(sqlQuery, databaseStructure);
+            }
+        });
+
+        // 生成SQL查询
+        function generateQuery(description) {
+            var promptText = `Generate a SQL query to ${description}.`;
+            fetch('/generate_query', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: promptText })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('resultText').textContent = data.generated_query;
+            });
+        }
+
+        // 优化SQL查询
+        function optimizeQuery(sqlQuery, databaseStructure) {
+            var promptText = `Optimize the following SQL query:\n\n${sqlQuery}\n\nusing the database structure:\n\n${databaseStructure}`;
+            fetch('/optimize_query', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: promptText })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('resultText').textContent = data.optimized_query;
+            });
+        }
+    </script>
+</body>
+</html>

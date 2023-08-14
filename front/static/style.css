@@ -1,0 +1,17 @@
+/* 在style.css中添加自定义样式 */
+body {
+    padding: 20px;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.btn-group {
+    margin-top: 10px;
+}
+
+.result {
+    margin-top: 20px;
+}
