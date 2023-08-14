@@ -46,5 +46,5 @@ SQL_GPT 是一款强大的工具，它能够通过简单的文字描述，自动
 
 ## Star历史
 
->>>>>>> origin/main
+>>>
 [![Star History Chart](https://api.star-history.com/svg?repos=CL-lau/SQL-GPT&type=Date)](https://star-history.com/#CL-lau/SQL-GPT&Date)
