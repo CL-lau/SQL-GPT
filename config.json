@@ -1,31 +1,14 @@
 {
     "openai": {
-        "app_key": "YOUR_OPENAI_APP_KEY",
+        "app_key": "",
         "url_base": "https://api.openai.com/v1",
         "app_keys": []
     },
     "proxy": {
-        "address": "proxy.example.com",
-        "port": "8080"
+        "address": "127.0.0.1",
+        "port": "7890"
     },
     "jdbc": [
-        {
-            "host": "localhost",
-            "dp": "test_db1",
-            "name": "name",
-            "password": "password"
-        },
-        {
-            "host": "localhost",
-            "dp": "test_db2",
-            "name": "name",
-            "password": "password"
-        },
-        {
-            "host": "localhost",
-            "dp": "test_db3",
-            "name": "name",
-            "password": "password"
-        }
+
     ]
 }

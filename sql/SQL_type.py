@@ -2,6 +2,7 @@ from enum import Enum
 
 
 def get_db_operation_class(sql):
+
     sql = sql.strip().upper()
     if sql.startswith('SELECT'):
         return SQL_class.SELECT

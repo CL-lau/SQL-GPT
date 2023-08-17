@@ -1,4 +1,5 @@
 import logging
+import re
 
 from gpt.chat import ChatGPT
 from sql.SQL_operator import SQL_operator
@@ -45,11 +46,11 @@ class SQL_GPT(ChatGPT):
         else:
             sql = self.contextual_chat(questions=questions, system_assistant=self.SQL_prompt)
         sql = self.processSQL(sql)
-        # 获取具体的SQL类型
-        operator_type = get_db_operation_class(sql)
 
         # 仅针对SELECT和INSERT来进行获取结果的可能。
         if need_operate:
+            # 获取具体的SQL类型
+            operator_type = get_db_operation_class(sql)
             if operator_type == SQL_class.SELECT or operator_type == SQL_class.INSERT:
                 result = self.SQL_operator.operate_SQL(sql)
                 return sql, result
@@ -106,9 +107,15 @@ class SQL_GPT(ChatGPT):
 
     def processSQL(self, sql):
         if str(sql).__contains__('\n'):
-            start = str(sql).find('\n') + 1
-            end = str(sql).rfind('\n')
-            sql = sql[start: end]
-            sql = str(sql).replace('\n', '')
-            print(self.orm.data_file)
+            sql = str(sql).replace('\n', ' ')
+        self.orm.save(sql)
+        res = ""
+
+        # 匹配SQL语句
+        pattern = r'\b(SELECT|INSERT|UPDATE|DELETE|CREATE|DROP|ALTER)\b.*?(?=;|$)'
+        sql_list = re.findall(pattern, sql, re.IGNORECASE | re.DOTALL)
+        # 输出匹配结果
+        for item in sql_list:
+            res = res + item
+            res = res + " "
         return sql

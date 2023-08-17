@@ -52,7 +52,7 @@ class SQL_operator(nn.Module):
                 self.passwords.append(password)
                 self.userNameMap[host + '/' + db] = name
                 self.passwordMap[host + '/' + db] = password
-                self.connMap[host + '/' + db] = create_engine('mysql+pymysql://' + name + ':' + password + '@' + jdbc)
+                self.connMap[host + '/' + db] = create_engine('mysql+pymysql://' + name + ':' + password + '@' + host + '/' + db)
 
     def get_table_columns(self):
         for jdbc in self.jdbcList:

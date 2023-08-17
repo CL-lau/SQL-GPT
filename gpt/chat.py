@@ -40,25 +40,42 @@ class ChatGPT(nn.Module):
             openai_config = config['openai']
             proxy_config = config['proxy']
 
-            openai_app_key = openai_config['app_key']
-            openai_url_base = openai_config['url_base']
-            openai_app_keys = openai_config['app_keys']
-            model_type = openai_config['model_type']
+            openai_app_key = None
+            openai_url_base = None
+            openai_app_keys = None
+            model_type = None
+            proxy_address = None
+            proxy_port = None
 
-            proxy_address = proxy_config['address']
-            proxy_port = proxy_config['port']
+            if 'app_key' in openai_config.keys():
+                openai_app_key = openai_config['app_key']
+            if 'url_base' in openai_config.keys():
+                openai_url_base = openai_config['url_base']
+            if 'app_keys' in openai_config.keys():
+                openai_app_keys = openai_config['app_keys']
+            if 'model_type' in openai_config.keys():
+                model_type = openai_config['model_type']
+
+            if 'address' in proxy_config.keys():
+                proxy_address = proxy_config['address']
+            if 'port' in proxy_config.keys():
+                proxy_port = proxy_config['port']
             if openai_app_key is not None and openai_app_key != "":
+                logging.info("set openai_app_key as " + openai_app_key)
                 openai.api_base = openai_app_key
                 self.OPENAI_API_KEY = openai_app_key
             if openai_url_base is not None and openai_url_base != "":
+                logging.info("set openai_url_base as " + openai_url_base)
                 openai.api_base = openai_url_base
                 self.OPENAI_API_BASE = openai_url_base
             if openai_app_keys is not None and len(openai_app_keys) > 0:
                 for key in openai_app_keys:
+                    logging.info("add" + key + " to openai_app_keys")
                     self.app_keys.append(key)
             if model_type is not None and model_type != "":
                 self.MODEL_TYPE = model_type
-            if proxy_address is not None and proxy_address != "" and proxy_port is not None and proxy_port != "":
+            if (proxy_address is not None and proxy_address != "") and (proxy_port is not None and proxy_port != ""):
+                logging.info("add proxy to chat.")
                 os.environ['http_proxy'] = f'http://{proxy_address}:{proxy_port}'
                 os.environ['https_proxy'] = f'http://{proxy_address}:{proxy_port}'
 
@@ -95,6 +112,7 @@ class ChatGPT(nn.Module):
                 messages.append({"role": "user", "content": questions})
             response = None
             if temperature is None:
+                print(self.MODEL_TYPE, messages)
                 response = openai.ChatCompletion.create(
                     model=self.MODEL_TYPE,
                     messages=messages,
@@ -106,6 +124,7 @@ class ChatGPT(nn.Module):
                         messages=messages,
                         temperature=temperature,
                     )
+            logging.info(response)
             result = self.processResponse(response)
             return result
         except openai.error.AuthenticationError:
@@ -219,14 +238,13 @@ class ChatGPT(nn.Module):
         try:
             encoding = tiktoken.encoding_for_model(self.MODEL_TYPE)
         except KeyError:
-            print("Warning: model not f"
-                  "ound. Using cl100k_base encoding.")
+            logging.info("Warning: model not found. Using cl100k_base encoding.")
             encoding = tiktoken.get_encoding("cl100k_base")
         if self.MODEL_TYPE == "gpt-3.5-turbo":
-            print("Warning: gpt-3.5-turbo may change over time. Returning num tokens assuming gpt-3.5-turbo-0301.")
+            logging.info("Warning: gpt-3.5-turbo may change over time. Returning num tokens assuming gpt-3.5-turbo-0301.")
             return self.num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301")
         elif self.MODEL_TYPE == "gpt-4":
-            print("Warning: gpt-4 may change over time. Returning num tokens assuming gpt-4-0314.")
+            logging.info("Warning: gpt-4 may change over time. Returning num tokens assuming gpt-4-0314.")
             return self.num_tokens_from_messages(messages, model="gpt-4-0314")
         elif self.MODEL_TYPE == "gpt-3.5-turbo-0301":
             tokens_per_message = 4  # every message follows <|start|>{role/name}\n{content}<|end|>\n

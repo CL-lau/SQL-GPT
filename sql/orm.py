@@ -4,7 +4,7 @@ import os
 
 
 class orm(nn.Module):
-    def __init__(self, data_file="./orm/sql.pkl"):
+    def __init__(self, data_file="../logger/sql.pkl"):
         super().__init__()
         self.data_file = data_file
 
