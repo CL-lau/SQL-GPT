@@ -60,11 +60,11 @@ class ChatGPT(nn.Module):
                 proxy_address = proxy_config['address']
             if 'port' in proxy_config.keys():
                 proxy_port = proxy_config['port']
-            if openai_app_key is not None and openai_app_key != "":
+            if openai_app_key is not None and openai_app_key != "" and self.OPENAI_API_KEY is None:
                 logging.info("set openai_app_key as " + openai_app_key)
                 openai.api_base = openai_app_key
                 self.OPENAI_API_KEY = openai_app_key
-            if openai_url_base is not None and openai_url_base != "":
+            if openai_url_base is not None and openai_url_base != "" and self.OPENAI_API_BASE is None:
                 logging.info("set openai_url_base as " + openai_url_base)
                 openai.api_base = openai_url_base
                 self.OPENAI_API_BASE = openai_url_base

@@ -10,5 +10,12 @@
     },
     "jdbc": [
 
-    ]
+    ],
+    "redis": {
+        "host": "localhost",
+        "port": 6379,
+        "db": 0,
+        "pool_size": 10,
+        "password": "admin"
+    }
 }

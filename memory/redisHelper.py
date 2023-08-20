@@ -1,10 +1,32 @@
+import json
+import logging
+import os
+
 import redis
 
+
 class RedisHelper:
-    def __init__(self, host='localhost', port=6379, db=0, pool_size=10):
+    def __init__(self, host=None, port=None, db=None, pool_size=None, password=None, config_file=None):
+        self.config_file = '../config.json'
+        self.host = host
+        self.port = port
+        self.db = db
+        self.pool_size = pool_size
+        self.password = password
+
+        self.initConfig()
+
         # 创建连接池
-        self.redis_pool = redis.ConnectionPool(host=host, port=port, db=db, max_connections=pool_size)
-        self.redis_conn = redis.StrictRedis(connection_pool=self.redis_pool, decode_responses=True)
+        self.redis_pool = redis.ConnectionPool(
+            host=self.host,
+            port=self.port,
+            db=self.db,
+            max_connections=self.pool_size,
+            password=self.password
+        )
+        self.redis_conn = redis.StrictRedis(connection_pool=self.redis_pool,
+                                            decode_responses=True
+                                            )
 
     # String 操作
     def set(self, key, value, expire=None):
@@ -59,6 +81,46 @@ class RedisHelper:
         for message in pubsub.listen():
             if message['type'] == 'message':
                 callback(message['channel'], message['data'])
+
+    def initConfig(self):
+        if os.path.exists(self.config_file):
+            with open(self.config_file, 'r') as config_file:
+                config = json.load(config_file)
+            redis_config = config['redis']
+
+            host = None
+            port = None
+            db = None
+            pool_size = None
+            password = None
+
+            if 'host' in redis_config.keys():
+                host = redis_config['host']
+            if 'port' in redis_config.keys():
+                port = redis_config['port']
+            if 'db' in redis_config.keys():
+                db = redis_config['db']
+            if 'pool_size' in redis_config.keys():
+                pool_size = redis_config['pool_size']
+            if 'password' in redis_config.keys():
+                password = redis_config['password']
+
+            if host is not None and host != "" and self.host is None:
+                logging.info("set redis host as " + host)
+                self.host = host
+            if port is not None and port != -1 and self.port is None:
+                logging.info("set redis port as " + str(port))
+                self.port = port
+            if db is not None and db != -1 and self.db is None:
+                self.db = db
+                logging.info("set redis db as " + str(db))
+            if pool_size is not None and pool_size != -1 and self.pool_size is None:
+                logging.info("set redis pool_size as " + str(pool_size))
+                self.pool_size = pool_size
+            if password is not None and password != "" and self.password is None:
+                logging.info("set redis password as " + password)
+                self.password = password
+
 
 if __name__ == "__main__":
     redis_helper = RedisHelper()
