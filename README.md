@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/CL-lau/SQL-GPT/blob/main/README-zh.md" target="_blank">
+  <a href="https://github.com/CL-lau/SQL-GPT/blob/main/README_zh.md" target="_blank">
       Chinese Docs
   </a> |
   <a href="https://github.com/CL-lau/SQL-GPT/blob/main/README.md" target="_blank">
