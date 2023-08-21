@@ -13,13 +13,6 @@
 </p>
 
 <p align="center">
-
-[//]: # (  <a href="https://discord.gg/MMeYNTmh3x" target="_blank">)
-[//]: # (      <img src="https://img.shields.io/discord/1073293645303795742" alt="Discord">)
-[//]: # (  </a> |)
-[//]: # (  <a href="https://github.com/chroma-core/chroma/blob/master/LICENSE" target="_blank">)
-[//]: # (      <img src="https://img.shields.io/static/v1?label=license&message=Apache 2.0&color=white" alt="License">)
-[//]: # (  </a> |)
   <a href="https://github.com/CL-lau/SQL-GPT/blob/main/README-zh.md" target="_blank">
       中文文档
   </a> |
