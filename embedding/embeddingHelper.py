@@ -1,5 +1,8 @@
+import concurrent.futures
 import logging
 import os.path
+import threading
+import time
 
 import numpy as np
 import torch
@@ -22,6 +25,8 @@ from langchain.text_splitter import (
 from chromadb.utils import embedding_functions
 
 from memory.RedisCaching import RedisCaching
+import asyncio
+import threading
 
 
 class EmbeddingHelper(nn.Module):
@@ -39,9 +44,12 @@ class EmbeddingHelper(nn.Module):
 
         self.collections = self.client.list_collections()
 
-        sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(
-            model_name="all-MiniLM-L6-v2")
+        # sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(
+        #     model_name="all-MiniLM-L6-v2")
         default_ef = embedding_functions.DefaultEmbeddingFunction()
+
+        self.embedding_type = embedding_type
+
         self.embedding_model = default_ef
         self.collection = self.client.get_or_create_collection(name=embeddingFile,
                                                                embedding_function=default_ef)
@@ -50,15 +58,10 @@ class EmbeddingHelper(nn.Module):
 
         self.need_redis = need_redis
 
-        self.embedding_type = embedding_type
         self.checkClient()
 
         if self.need_redis:
-            try:
-                self.redisCaching = RedisCaching()
-            except Exception:
-                logging.info('init redis went some error， please check it.')
-                self.need_redis = False
+            self.redisCaching = RedisCaching()
 
     def query(self,
               text,
@@ -69,9 +72,11 @@ class EmbeddingHelper(nn.Module):
         # where={"metadata_field": "is_equal_to_this"},
         # where_document={"$contains": "search_string"}
         if self.need_redis:
-            res = self.query_preprocessing(text)
+            starttime = time.time()
+            res = self.query_preprocessing(text, top_k=topK)
             if res is not None:
-                return res
+                if len(res) >= 1:
+                    return res
         if where is None:
             if where_document is None:
                 result = self.collection.query(
@@ -417,36 +422,36 @@ class EmbeddingHelper(nn.Module):
 
     def processResult(self, query: list = None, query_vec: list = None, result=None):
         if self.need_redis and query is not None:
-            for i in range(len(query)):
-                mem = []
-                for j in range(result['documents'][i].__len__()):
-                    mem.append((result['documents'][i][j], self.embedding_model(result['documents'][i][j])))
-                if query_vec is None:
-                    vec = self.embedding_model(query[i])[0]
-                if query_vec is not None:
-                    vec = query_vec[i]
-                self.redisCaching.update_cache(query[i], vec, mem)
+            self.insert_cahing(
+                query=query,
+                query_vec=query_vec,
+                result=result
+            )
 
         return result['documents']
         # TODO 做一些打点标记
 
-    def query_preprocessing(self, text: str):
+    def query_preprocessing(self, text: str, top_k=3):
         if self.need_redis:
             if isinstance(text, str):
-                vec = self.embedding_model(text)[0]
-                res = [self.redisCaching.query_cache(query=text, query_vec=np.array(vec))]
-                # TODO 加入redis
+                vec = self.embedding_model([text])[0]
+                res = []
+                ans = self.redisCaching.query_cache(query=text, query_vec=np.array(vec), k=top_k)
+                if ans is not None:
+                    ans = str(ans).split('___')
+                    res.append(ans)
                 return res
         return None
 
-    def batchQuery_preprocessing(self, texts):
+    def batchQuery_preprocessing(self, texts, top_k=3):
         if self.need_redis:
             if isinstance(texts, list):
                 res = []
                 for text in texts:
-                    vec = self.embedding_model(text)[0]
-                    ans = self.redisCaching.query_cache(query=text, query_vec=np.array(vec))
+                    vec = self.embedding_model([text])[0]
+                    ans = self.redisCaching.query_cache(query=text, query_vec=np.array(vec), k=top_k)
                     if ans is not None:
+                        ans = str(ans).split('___')
                         res.append(ans)
                 if len(res) == len(texts):
                     return res
@@ -523,7 +528,7 @@ class EmbeddingHelper(nn.Module):
         Google PaLM API models,
         HuggingFace ]
         """
-        print(self.embedding_type)
+        logging.info(self.embedding_type)
         model = embedding_functions.DefaultEmbeddingFunction()
         if model_type == "all-MiniLM-L6-v2":
             model = embedding_functions.DefaultEmbeddingFunction()
@@ -551,3 +556,22 @@ class EmbeddingHelper(nn.Module):
                 model_name=HuggingFace_model_name
             )
         return model
+
+    def insert_cahing(self, query: list = None, query_vec: list = None, result=None):
+        # default_ef = embedding_functions.DefaultEmbeddingFunction()
+        query_vec = None
+        for i in range(len(query)):
+            mem = []
+            for j in range(result['documents'][i].__len__()):
+                mem.append((result['documents'][i][j], np.random.rand(384).tolist()))
+                # mem.append((result['documents'][i][j], self.embedding_model(result['documents'][i][j])))
+
+            if query_vec is None:
+                vec = self.embedding_model(query[i])[0]
+            if query_vec is not None:
+                vec = query_vec[i]
+            self.redisCaching.update_cache(query[i], vec, mem)
+
+    def cahing_finished_callback(self, future):
+        self.my_property = future.result()
+        print("Long running task finished.")

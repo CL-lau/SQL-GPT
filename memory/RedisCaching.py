@@ -1,3 +1,4 @@
+import ast
 import json
 import logging
 import os
@@ -10,12 +11,12 @@ import numpy as np
 class RedisCaching:
     def __init__(self, host=None, port=None, db=None, pool_size=None, password=None, config_file=None, th=0.5):
         if config_file is None:
-            self.config_file = '../config.json'
-        self.host = host
-        self.port = port
-        self.db = db
-        self.pool_size = pool_size
-        self.password = password
+            self.config_file = 'config.json'
+        self.host = None
+        self.port = None
+        self.db = None
+        self.pool_size = None
+        self.password = None
         self.th = th
 
         self.initConfig()
@@ -26,9 +27,12 @@ class RedisCaching:
             db=self.db,
             password=self.password,
             max_connections=self.pool_size
-                             )
+        )
+        self.clear_cache()
 
     def calculate_similarity(self, vec1, vec2):
+        print(vec1.shape)
+        print(vec2.shape)
         # 假设这里用余弦相似度计算嵌入向量的相似度
         dot_product = np.dot(vec1, vec2)
         norm1 = np.linalg.norm(vec1)
@@ -44,31 +48,41 @@ class RedisCaching:
         cached_queries = self.r.keys('query:*')
         for cached_query in cached_queries:
             cached_query_str = self.r.hget(cached_query, 'query_str')
-            cached_query_vec = np.fromstring(self.r.hget(cached_query, 'query_vec'), dtype=float)
-            similarity = self.calculate_similarity(query_vec, cached_query_vec)
-
-            if similarity >= self.th:
-                cached_result = self.r.hget(cached_query, 'result')
-                # results.append((cached_query_str, cached_result))
-                # similarity_scores[cached_result] += similarity
-                logging.info('命中第一层缓存。cached_result:', cached_query_str, cached_query_vec, cached_result)
-                # return cached_result
+            cached_query_vec = np.array(ast.literal_eval(self.r.hget(cached_query, 'query_vec').decode('utf-8')), dtype=float)
+            if query_vec.shape == cached_query_vec.shape:
+                similarity = self.calculate_similarity(query_vec, cached_query_vec)
+                print('一级缓存：', similarity, cached_query_str)
+                if similarity >= self.th:
+                    cached_result = self.r.hget(cached_query, 'result')
+                    # results.append((cached_query_str, cached_result))
+                    # similarity_scores[cached_result] += similarity
+                    logging.info('命中第一层缓存。cached_result:', cached_query_str, cached_query_vec, cached_result)
+                    """
+                    return 参数: 'ans___ans___ans'
+                    """
+                    return cached_result
 
         # 查询第二层缓存
         cached_results = self.r.zrangebyscore('cached_results', 0, float('inf'), withscores=True)
         for cached_result, score in cached_results:
             cached_result_str = cached_result.decode('utf-8')
-            cached_result_vec = np.fromstring(self.r.hget(f'result:{cached_result_str}', 'result_vec'),
-                                              dtype=float)
-            similarity = self.calculate_similarity(query_vec, cached_result_vec)
-            if similarity >= self.th:
-                results.append(cached_result_str)
-                # similarity_scores[cached_result_str] += similarity
-                if similarity_scores[cached_result_str] >= self.th:  # 根据实际情况判断是否递增出现次数
-                    self.r.zincrby(name='cached_results', value=cached_result_str, amount=1)  # 增加出现次数
-                if len(results) >= k:
-                    logging.info('命中第二层缓存: ', results)
-                    return results
+            cached_result_vec = np.array(ast.literal_eval(self.r.hget(f'result:{cached_result_str}', 'result_vec').decode('utf-8')),
+                                         dtype=float)
+            if query_vec.shape == cached_result_vec.shape:
+                similarity = self.calculate_similarity(query_vec, cached_result_vec)
+                print(similarity)
+                if similarity >= self.th:
+                    results.append(cached_result_str)
+                    # similarity_scores[cached_result_str] += similarity
+                    if similarity_scores[cached_result_str] >= self.th:  # 根据实际情况判断是否递增出现次数
+                        self.r.zincrby(name='cached_results', value=cached_result_str, amount=1)  # 增加出现次数
+                    if len(results) >= k:
+                        results_str = '___'.join(results)
+                        logging.info('命中第二层缓存: ', results)
+                        """
+                        return 参数: 'ans___ans___ans'
+                        """
+                        return results_str
 
         return None
 
@@ -91,7 +105,7 @@ class RedisCaching:
         logging.info('更新缓存。')
         # 更新第一层缓存
         self.r.hset(f'query:{query}', 'query_str', query)
-        self.r.hset(f'query:{query}', 'query_vec', query_vec.tobytes())
+        self.r.hset(f'query:{query}', 'query_vec', str(query_vec))
         results_string = [result[0] for result in results]
         self.r.hset(f'query:{query}', 'result', '___'.join(results_string))
 
@@ -99,7 +113,7 @@ class RedisCaching:
         for result in results:
             result_str, result_vec = result
             self.r.hset(f'result:{result_str}', 'result_str', result_str)
-            self.r.hset(f'result:{result_str}', 'result_vec', result_vec.tobytes())
+            self.r.hset(f'result:{result_str}', 'result_vec', str(result_vec))
             self.r.zadd('cached_results', {result_str: 0})  # 初始化相似节点计数
 
     def clear_cache(self):
@@ -111,7 +125,6 @@ class RedisCaching:
             with open(self.config_file, 'r') as config_file:
                 config = json.load(config_file)
             redis_config = config['redis']
-
             host = None
             port = None
             db = None
@@ -145,31 +158,31 @@ class RedisCaching:
                 logging.info("set redis password as " + password)
                 self.password = password
 
-if __name__ == '__main__':
-
-    import numpy as np
-
-    # 假设有一个查询向量和查询字符串
-    query_vec = np.random.rand(10)
-    query = "Query string"
-
-    # 模拟数据库查询结果
-    db_result = [("Result 1", np.random.rand(10)), ("Result 2", np.random.rand(10))]
-
-    # 创建 RedisCaching 实例
-    redis_caching = RedisCaching()
-
-    # 查询缓存，首次查询应该命中数据库并更新缓存
-    cached_results = redis_caching.query_cache(query, query_vec)
-    print("Cached Results (1st Query):", cached_results)
-
-    # 再次查询，这次应该命中缓存
-    cached_results = redis_caching.query_cache(query, query_vec)
-    print("Cached Results (2nd Query):", cached_results)
-
-    # 清空缓存
-    redis_caching.clear_cache()
-
-    # 再次查询，现在应该再次命中数据库并更新缓存
-    cached_results = redis_caching.query_cache(query, query_vec)
-    print("Cached Results (After Cache Clear):", cached_results)
+# if __name__ == '__main__':
+#
+#     import numpy as np
+#
+#     # 假设有一个查询向量和查询字符串
+#     query_vec = np.random.rand(10)
+#     query = "Query string"
+#
+#     # 模拟数据库查询结果
+#     db_result = [("Result 1", np.random.rand(10)), ("Result 2", np.random.rand(10))]
+#
+#     # 创建 RedisCaching 实例
+#     redis_caching = RedisCaching()
+#
+#     # 查询缓存，首次查询应该命中数据库并更新缓存
+#     cached_results = redis_caching.query_cache(query, query_vec)
+#     print("Cached Results (1st Query):", cached_results)
+#
+#     # 再次查询，这次应该命中缓存
+#     cached_results = redis_caching.query_cache(query, query_vec)
+#     print("Cached Results (2nd Query):", cached_results)
+#
+#     # 清空缓存
+#     redis_caching.clear_cache()
+#
+#     # 再次查询，现在应该再次命中数据库并更新缓存
+#     cached_results = redis_caching.query_cache(query, query_vec)
+#     print("Cached Results (After Cache Clear):", cached_results)

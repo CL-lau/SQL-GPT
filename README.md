@@ -1,52 +1,119 @@
+[//]: # (# SQL_GPT: Tools for interacting with SQL and files are implemented through LLMs.)
 
-# SQL_GPT: SQL 生成工具
+<p align="center">
+<a href="https://github.com/CL-lau/SQL-GPT">
+<img src="./assets/main.png" alt="Chroma logo">
 
-## 简介
+[//]: # (<center><span style="font-family: Arial; font-size: 30px;">SQL-GPT</span></center>)
+</a>
+</p>
 
-SQLGPT 是一款强大的工具，它能够通过简单的文字描述，自动生成符合要求的 SQL 查询语句。无论您是在快速生成复杂查询还是与数据库进行交互，SQL_GPT 都能够显著提升您的效率和工作流程。
+<p align="center">
+    <b>Tools for interacting with SQL and files are implemented through LLMs.</b>. <br />
+    The most complete access interface is encapsulated
+</p>
 
-## 功能列表
+<p align="center">
 
-- [x] **自动生成 SQL 查询：** 只需简单的文字描述，工具将自动生成符合要求的 SQL 查询语句。
-- [x] **错误修正建议：** 在查询存在错误时，工具会提供智能的修正建议，助您快速解决问题。
-- [x] **数据库连接管理：** 轻松配置和管理多个数据库连接，直接在工具内执行生成的 SQL 查询。
-- [x] **多数据库兼容：** 工具兼容多种主流数据库系统，适用于不同项目的需求。
-- [x] **代理访问支持：** 针对特定场景，您可以通过系统代理来访问 GPT 服务。
-- [x] **多 API KEY 轮询：** 您可以设置多个备选 ```API KEY``` 来访问 GPT，提升稳定性。
-- [x] **SQL语句优化：** 通过GPT的能力根据数据库的结构进行SQL语句优化。
-- [x] **Java持久层SQL语句生成：** 结合SQL以及数据库结构信息来自动生成Java持久层语句，如：```Mybatis```。
-- [x] **多轮对话：** 通过多轮对话的方式来实现对生成SQL的不断优化。
-- [x] **对文件系统对话** 通过引入向量数据库来完成对文件系统信息的整理，完整和文件系统的对话。
-- [x] **增加缓存操作来加速文件对话** 通过引入多种的redis结构体来完成对向量数据库的访问加速。平均提高30%的查找速度、
-- [ ] **数据自动可视化分析：** 在通过数据库操作完数据之后，通过对数据进行分析来展示数据的基础信息。
+[//]: # (  <a href="https://discord.gg/MMeYNTmh3x" target="_blank">)
+[//]: # (      <img src="https://img.shields.io/discord/1073293645303795742" alt="Discord">)
+[//]: # (  </a> |)
+[//]: # (  <a href="https://github.com/chroma-core/chroma/blob/master/LICENSE" target="_blank">)
+[//]: # (      <img src="https://img.shields.io/static/v1?label=license&message=Apache 2.0&color=white" alt="License">)
+[//]: # (  </a> |)
+  <a href="https://github.com/CL-lau/SQL-GPT/blob/main/README-zh.md" target="_blank">
+      Chinese Docs
+  </a> |
+  <a href="https://github.com/CL-lau/SQL-GPT/blob/main/README.md" target="_blank">
+      English Docs
+  </a>
+</p>
 
-## 快速开始指南
+## Introduction
 
-要开始使用 SQL_GPT，只需按照以下简单步骤进行操作：
+SQLGPT is a powerful tool that can generate SQL queries that meet your requirements through simple text descriptions. Whether you need to quickly generate complex queries or interact with databases, SQL_GPT can significantly improve your efficiency and workflow.
 
-1. **安装所需依赖：** 确保您的环境中已安装 Python 3.x，并执行以下命令安装所需依赖包：
+## Feature List
+
+-[x] Automatic SQL Query Generation: Simply describe your query in text, and the tool will automatically generate the SQL query that meets your requirements.
+-[x] Error Correction Suggestions: When there are errors in your query, the tool will provide intelligent suggestions for fixing them, helping you quickly resolve issues.
+-[x] Database Connection Management: Easily configure and manage multiple database connections, and execute generated SQL queries directly within the tool.
+-[x] Multi-Database Compatibility: The tool is compatible with multiple mainstream database systems, suitable for the needs of different projects.
+-[x] Proxy Access Support: For specific scenarios, you can access the GPT service through a system proxy.
+-[x] Multi-API KEY Rotation: You can set multiple backup API keys to access GPT, improving stability.
+-[x] SQL Statement Optimization: Optimize SQL statements based on the structure of the database using GPT's capabilities.
+-[x] Java Persistence Layer SQL Statement Generation: Generate Java persistence layer statements, such as Mybatis, based on SQL and database structure information.
+-[x] Multi-Turn Dialogue: Continuously optimize generated SQL through multi-turn dialogue.
+-[x] File System Dialogue: Use vector databases to organize file system information and complete dialogue with the file system.
+-[x] Cache Operations to Accelerate File Dialogue: Use various Redis data structures to accelerate access to the vector database, improving average lookup speed by 30%.
+-[ ] Automatic Data Visualization Analysis: Analyze data and display basic information after completing database operations.
+
+## Quick Start Guide
+
+To start using SQL_GPT, simply follow these simple steps:
+
+1. **Install Required Dependencies:** Make sure Python 3.x is installed in your environment and execute the following command to install the required dependencies:
 
     ```bash
     pip install requirements.txt
     ```
-2. **配置OPENAI数据：** 在 ```config.json```中配置您的```OPENAI-KEY```以及```BASE_URL```信息来方便同Chat交互，还可以通过```OPENAI-KEYS```列表来设置多个APP_KEY。
 
-3. **配置数据库连接：** 在 ```config.json```中配置您的数据库连接信息，包括主机名、用户名、密码等，以便进行数据库交互。
+2. **Configure OPENAI**: Configure your ```OPENAI-KEY``` and ```BASE_URL``` information in ```config.json``` to facilitate interaction with Chat. You can also set multiple ```APP_KEYs``` through the ```OPENAI-KEYS``` list.
 
-4. **生成 SQL 查询：** 在工具的用户界面中，用自然语言描述您的查询需求。SQL_GPT 将会智能地生成相应的 SQL 查询语句。例如：
+3. **Configure database connection**: Configure your database connection information, including hostname, username, password, etc., in ```config.json``` for database interaction.
+
+4. **Generate SQL**: In the tool's user interface, describe your query requirements in natural language. SQL_GPT will intelligently generate the corresponding SQL query statement. For example:
    
    ```python
    from gpt.SQLGPT import SQL_GPT
+   from gpt.FILEGPT import File_GPT
    sql_GPT = SQL_GPT()
+   file_gpt = File_GPT()
    
    # 生成sql语句
-   sql_GPT.generateSQL("生成两个数据库表的关联查询操作。")
+   sql_GPT.generateSQL("Perform a join operation on two database tables.")
+   # answer: 'SELECT * FROM table1 JOIN table2 ON table1.column_name = table2.column_name;'
    
    # 对错误的SQL进行修改
    sql_GPT.SQL_ERROR_CHECK("SELECT * FROM tableA WHERE user_id IN (SELECT user_id FROM tableB LIMIT 1000);", "SQL执行失败: (1235, This version of MySQL doesn't yet support 'LIMIT & IN/ALL/ANY/SOME subquery'")
+   
+   # 向文件进行提问。
+   file_gpt.addFile("2307_01504.pdf", "./embedding")
+   file_gpt.askFile("who is the auther?")
+   # answer: 'The author of this work is Xiangguo Sun, along with co-authors Hong Cheng, Jia Li, Bo Liu, and Jihong Guan.'
+
    ```
 
-## Star历史
+## System Architecture
 
->>>
+SQl-GPT is a local question-answering system constructed based on LLM. It can generate SQL statements according to requirements, optimize and correct SQL statements, and generate MyBatis XML files based on them. In addition, it can directly execute SQL statements and set multiple monitored databases.
+On the basis of interacting with the database, it also interacts with the file system, increases the interaction context by introducing vector databases, and caches queries using Redis structures to improve query speed, while supporting multiple vector models.
+
+<center><span style="font-family: Arial; font-size: 13px;">Interact with local databases and file systems for Q&A</span></center>
+
+![系统架构](./assets/frame.png)
+### Prerequisites
+- ```redis``` Install Redis database, it is recommended to install it through Docker.
+   ```bash
+   docker run --restart=always -p 6379:6379 --name redis-docker -d redis:7.0.12  --requirepass admin
+   ```
+- ```api_key``` When interacting with the online LLM, you need to apply for the corresponding api-key.
+- ```MySql``` Install the MySql database locally, and it is also recommended to use Docker for installation.
+
+### Acknowledgement
+
+This project is standing on the shoulders of giants and is not going to work without the open-source communities. Special thanks to the following projects for their excellent contribution to the AI industry:
+- [FastChat](https://github.com/lm-sys/FastChat) for providing chat services
+- [vicuna-13b](https://lmsys.org/blog/2023-03-30-vicuna/) as the base model
+- [langchain](https://langchain.readthedocs.io/) tool chain
+- [Auto-GPT](https://github.com/Significant-Gravitas/Auto-GPT) universal plugin template
+- [Hugging Face](https://huggingface.co/) for big model management
+- [Chroma](https://github.com/chroma-core/chroma) for vector storage
+- [Milvus](https://milvus.io/) for distributed vector storage
+- [ChatGLM](https://github.com/THUDM/ChatGLM-6B) as the base model
+- [llama_index](https://github.com/jerryjliu/llama_index) for enhancing database-related knowledge using [in-context learning](https://arxiv.org/abs/2301.00234) based on existing knowledge bases.
+
+
+## Star history
+
 [![Star History Chart](https://api.star-history.com/svg?repos=CL-lau/SQL-GPT&type=Date)](https://star-history.com/#CL-lau/SQL-GPT&Date)
