@@ -27,7 +27,6 @@
 SQLGPT is a powerful tool that can generate SQL queries that meet your requirements through simple text descriptions. Whether you need to quickly generate complex queries or interact with databases, SQL_GPT can significantly improve your efficiency and workflow.
 
 ## Feature List
-
 -[x] Automatic SQL Query Generation: Simply describe your query in text, and the tool will automatically generate the SQL query that meets your requirements.
 -[x] Error Correction Suggestions: When there are errors in your query, the tool will provide intelligent suggestions for fixing them, helping you quickly resolve issues.
 -[x] Database Connection Management: Easily configure and manage multiple database connections, and execute generated SQL queries directly within the tool.
