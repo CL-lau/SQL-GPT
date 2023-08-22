@@ -27,18 +27,18 @@
 SQLGPT is a powerful tool that can generate SQL queries that meet your requirements through simple text descriptions. Whether you need to quickly generate complex queries or interact with databases, SQL_GPT can significantly improve your efficiency and workflow.
 
 ## Feature List
--[x] Automatic SQL Query Generation: Simply describe your query in text, and the tool will automatically generate the SQL query that meets your requirements.
--[x] Error Correction Suggestions: When there are errors in your query, the tool will provide intelligent suggestions for fixing them, helping you quickly resolve issues.
--[x] Database Connection Management: Easily configure and manage multiple database connections, and execute generated SQL queries directly within the tool.
--[x] Multi-Database Compatibility: The tool is compatible with multiple mainstream database systems, suitable for the needs of different projects.
--[x] Proxy Access Support: For specific scenarios, you can access the GPT service through a system proxy.
--[x] Multi-API KEY Rotation: You can set multiple backup API keys to access GPT, improving stability.
--[x] SQL Statement Optimization: Optimize SQL statements based on the structure of the database using GPT's capabilities.
--[x] Java Persistence Layer SQL Statement Generation: Generate Java persistence layer statements, such as Mybatis, based on SQL and database structure information.
--[x] Multi-Turn Dialogue: Continuously optimize generated SQL through multi-turn dialogue.
--[x] File System Dialogue: Use vector databases to organize file system information and complete dialogue with the file system.
--[x] Cache Operations to Accelerate File Dialogue: Use various Redis data structures to accelerate access to the vector database, improving average lookup speed by 30%.
--[ ] Automatic Data Visualization Analysis: Analyze data and display basic information after completing database operations.
+- [x] Automatic SQL Query Generation: Simply describe your query in text, and the tool will automatically generate the SQL query that meets your requirements.
+- [x] Error Correction Suggestions: When there are errors in your query, the tool will provide intelligent suggestions for fixing them, helping you quickly resolve issues.
+- [x] Database Connection Management: Easily configure and manage multiple database connections, and execute generated SQL queries directly within the tool.
+- [x] Multi-Database Compatibility: The tool is compatible with multiple mainstream database systems, suitable for the needs of different projects.
+- [x] Proxy Access Support: For specific scenarios, you can access the GPT service through a system proxy.
+- [x] Multi-API KEY Rotation: You can set multiple backup API keys to access GPT, improving stability.
+- [x] SQL Statement Optimization: Optimize SQL statements based on the structure of the database using GPT's capabilities.
+- [x] Java Persistence Layer SQL Statement Generation: Generate Java persistence layer statements, such as Mybatis, based on SQL and database structure information.
+- [x] Multi-Turn Dialogue: Continuously optimize generated SQL through multi-turn dialogue.
+- [x] File System Dialogue: Use vector databases to organize file system information and complete dialogue with the file system.
+- [x] Cache Operations to Accelerate File Dialogue: Use various Redis data structures to accelerate access to the vector database, improving average lookup speed by 30%.
+- [ ] Automatic Data Visualization Analysis: Analyze data and display basic information after completing database operations.
 
 ## Quick Start Guide
 
