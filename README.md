@@ -39,7 +39,7 @@ SQLGPT is a powerful tool that can generate SQL queries that meet your requireme
 - [x] File System Dialogue: Use vector databases to organize file system information and complete dialogue with the file system.
 - [x] Cache Operations to Accelerate File Dialogue: Use various Redis data structures to accelerate access to the vector database, improving average lookup speed by 30%.
 - [ ] Automatic Data Visualization Analysis: Analyze data and display basic information after completing database operations.
-- [ ] Privacy protection: protects privacy by encoding structural information about the queried datab. <span style="color: blue">Development has begun.</span>
+- [ ] Privacy protection: protects privacy by encoding structural information about the queried datab. * **<span style="color: blue">Development has begun.</span>** *
 
 ## Quick Start Guide
 
