@@ -5,8 +5,25 @@ sqlalchemy
 flask
 unstructured
 tqdm
-langchain==0.0.266
+langchain
 pypdf
 # git+https://github.com/chroma-core/chroma.git
 chromadb
 redis
+
+requests
+streamlit
+simplejson
+pypika
+overrides
+pydantic
+asyncio
+numpy
+packaging
+uvicorn
+fastapi
+starlette
+posthog
+g4f
+pymysql
+pandas

@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-def get_db_operation_class(sql):
+def get_db_operation_class(sql) -> int:
 
     sql = sql.strip().upper()
     if sql.startswith('SELECT'):

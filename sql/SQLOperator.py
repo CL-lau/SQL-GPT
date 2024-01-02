@@ -1,14 +1,94 @@
 import json
 import logging
 import os
+import random
 import re
+import string
 import time
+from typing import Optional, Any
 
 import torch
 import torch.nn as nn
 from sqlalchemy import create_engine, text, inspect, MetaData, Table
 
 from sql.SQL_type import get_db_operation_class, SQL_class
+
+import pymysql
+import pandas as pd
+
+
+def singleton(cls):
+    instances = {}
+
+    def wrapper(*args, **kwargs):
+        if cls not in instances:
+            instances[cls] = cls(*args, **kwargs)
+        return instances[cls]
+
+    return wrapper
+
+
+@singleton
+class SQLHelper:
+    def __init__(self):
+        self.generated_ids = set()
+
+        self.dbMap = {}
+
+    def operate(self, sql: Optional[str], dbID: Optional[str]) -> [int, Any]:
+        sqlType = get_db_operation_class(sql=sql)
+
+        db = self.dbMap[dbID]
+        cursor = db.cursor()
+
+        if sqlType == SQL_class.UPDATE:
+            cursor.execute(sql)
+            db.commit()
+            updated_rows = cursor.rowcount
+            return SQL_class.UPDATE, updated_rows
+        elif sqlType == SQL_class.DELETE:
+            cursor.execute(sql)
+            db.commit()
+            deleted_rows = cursor.rowcount
+            return SQL_class.DELETE, deleted_rows
+        elif sqlType == SQL_class.INSERT:
+            cursor.execute(sql)
+            db.commit()
+            new_row_id = cursor.lastrowid
+            return SQL_class.INSERT, new_row_id
+        elif sqlType == SQL_class.SELECT:
+            cursor.execute(sql)
+            results = cursor.fetchall()
+            cursor.close()
+            db.close()
+            dataframe = pd.DataFrame(results, columns=[i[0] for i in cursor.description])  # 根据你的列名进行修改
+            return SQL_class.SELECT, dataframe
+        else:
+            return -1, -1
+
+    def add_db(self, dbAddress: Optional[str], dbPort: Optional[str], userName: Optional[str], password: Optional[str], dbName: Optional[str], dbID: Optional[str]) -> str:
+        db = pymysql.connect(host=dbAddress, port=int(dbPort), user=userName, password=password, database=dbName)
+
+        for key, value in self.dbMap.items():
+            if value.host == dbAddress and value.port == int(dbPort) and value.user == userName and value.password == password and value.database == dbName:
+                return key
+
+        if dbID is None:
+            dbID = self.generated_id()
+            self.dbMap[dbID] = db
+        else:
+            self.dbMap[dbID] = db
+        return dbID
+
+    def generated_id(self) -> str:
+        characters = string.ascii_letters + string.digits
+
+        while True:
+            idt = ''.join(random.choice(characters) for _ in range(13))
+            if idt not in self.generated_ids:
+                self.generated_ids.add(idt)
+                break
+        return idt
 
 
 class SQL_operator(nn.Module):

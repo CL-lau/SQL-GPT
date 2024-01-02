@@ -1,6 +1,8 @@
 import json
 import logging
 import os
+from typing import Optional
+
 import openai
 import torch
 import torch.nn as nn
@@ -9,7 +11,7 @@ logging.basicConfig(format='%(asctime)s - %(levelname)s - %(module)s - %(message
 
 
 class ChatGPT(nn.Module):
-    def __init__(self, OPENAI_API_KEY=None, OPENAI_API_BASE=None, MODEL_TYPE="gpt-3.5-turbo"):
+    def __init__(self, OPENAI_API_KEY: Optional[str] = None, OPENAI_API_BASE: Optional[str] = None, MODEL_TYPE="gpt-3.5-turbo"):
         super().__init__()
         self.config_file = "config.json"
         self.app_keys = []

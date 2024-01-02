@@ -1,8 +1,11 @@
 import concurrent.futures
 import logging
 import os.path
+import random
+import string
 import threading
 import time
+from typing import Optional
 
 import numpy as np
 import torch
@@ -23,19 +26,40 @@ from langchain.text_splitter import (
 )
 
 from chromadb.utils import embedding_functions
+from langchain_community.chat_models import ChatOpenAI
+from langchain_community.vectorstores.chroma import Chroma
+from langchain_core.documents import Document
+from langchain.llms import OpenAI
 
 from memory.RedisCaching import RedisCaching
 import asyncio
 import threading
+import streamlit as st
 
 
-class EmbeddingHelper(nn.Module):
-    def __init__(self,
-                 embeddingPath='./embedding',
-                 embeddingFile='test',
-                 need_redis=False,
-                 embedding_type='default'
-                 ):
+def singleton(cls):
+    instances = {}
+
+    def wrapper(*args, **kwargs):
+        if cls not in instances:
+            instances[cls] = cls(*args, **kwargs)
+        return instances[cls]
+
+    return wrapper
+
+
+class Singleton(type):
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super().__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+
+@singleton
+class EmbeddingHelper:
+    def __init__(self, embeddingPath='./embedding', embeddingFile='test', need_redis=False, embedding_type='default'):
         super().__init__()
         self.embeddingPath = embeddingPath
         self.embeddingFile = embeddingFile
@@ -63,12 +87,7 @@ class EmbeddingHelper(nn.Module):
         if self.need_redis:
             self.redisCaching = RedisCaching()
 
-    def query(self,
-              text,
-              topK=5,
-              where=None,
-              where_document=None
-              ):
+    def query(self, text, topK=5, where=None, where_document=None):
         # where={"metadata_field": "is_equal_to_this"},
         # where_document={"$contains": "search_string"}
         if self.need_redis:
@@ -108,12 +127,7 @@ class EmbeddingHelper(nn.Module):
         """
         return result
 
-    def batchQuery(self,
-                   texts,
-                   topK=5,
-                   where=None,
-                   where_document=None
-                   ):
+    def batchQuery(self, texts, topK=5, where=None, where_document=None):
         # where={"metadata_field": "is_equal_to_this"},
         # where_document={"$contains": "search_string"}
         if self.need_redis:
@@ -151,12 +165,7 @@ class EmbeddingHelper(nn.Module):
         """
         return result
 
-    def queryByEmbedding(self,
-                         embedding,
-                         topK=5,
-                         where=None,
-                         where_document=None
-                         ):
+    def queryByEmbedding(self, embedding, topK=5, where=None, where_document=None):
         if where is None:
             if where_document is None:
                 result = self.collection.query(
@@ -185,12 +194,7 @@ class EmbeddingHelper(nn.Module):
         result = self.processResult(result=result)
         return result[0]
 
-    def batchQueryByEmbedding(self,
-                              embeddings,
-                              topK=5,
-                              where=None,
-                              where_document=None
-                              ):
+    def batchQueryByEmbedding(self, embeddings, topK=5, where=None, where_document=None):
         if where is None:
             if where_document is None:
                 result = self.collection.query(
@@ -219,25 +223,13 @@ class EmbeddingHelper(nn.Module):
         result = self.processResult(result=result)
         return result
 
-    def saveFile(self,
-                 fileName,
-                 filePath,
-                 chunk_size=500,
-                 chunk_overlap=0,
-                 text_splitter=None,
-                 autoSpliter=False,
+    def saveFile(self, fileName, filePath, chunk_size=500, chunk_overlap=0, text_splitter=None, autoSpliter=False,
                  csv_delimiter=",",
-                 csv_quotechar='"',
-                 csv_fieldnames=[],
-                 json_jq_schema='.messages[].content',
-                 json_lines=True,
+                 csv_quotechar='"', csv_fieldnames=[], json_jq_schema='.messages[].content', json_lines=True,
                  dir_glob="**/*.md",
-                 dir_show_progress=True,
-                 dir_use_multithreading=False,
+                 dir_show_progress=True, dir_use_multithreading=False,
                  dir_text_loader_kwargs={'autodetect_encoding': True},
-                 dir_silent_errors=True,
-                 dir_loader_cls=TextLoader
-                 ):
+                 dir_silent_errors=True, dir_loader_cls=TextLoader):
         documents = self.split(
             fileName=fileName,
             filePath=filePath,
@@ -269,25 +261,13 @@ class EmbeddingHelper(nn.Module):
             } for i in range(documents.__len__())]
         )
 
-    def split(self,
-              fileName,
-              filePath,
-              chunk_size=500,
-              chunk_overlap=0,
-              text_splitter=None,
-              autoSpliter=False,
+    def split(self, fileName, filePath, chunk_size=500, chunk_overlap=0, text_splitter=None, autoSpliter=False,
               csv_delimiter=",",
-              csv_quotechar='"',
-              csv_fieldnames=[],
-              json_jq_schema='.messages[].content',
-              json_lines=True,
+              csv_quotechar='"', csv_fieldnames=[], json_jq_schema='.messages[].content', json_lines=True,
               dir_glob="**/*.md",
-              dir_show_progress=True,
-              dir_use_multithreading=False,
+              dir_show_progress=True, dir_use_multithreading=False,
               dir_text_loader_kwargs={'autodetect_encoding': True},
-              dir_silent_errors=True,
-              dir_loader_cls=TextLoader
-              ):
+              dir_silent_errors=True, dir_loader_cls=TextLoader):
         text_splitter = self.getSpliter(
             textSplit=text_splitter,
             fileName=fileName,
@@ -363,13 +343,7 @@ class EmbeddingHelper(nn.Module):
         # assert not self.client.heartbeat(), logging.error("the embedding factory is not available.")
         pass
 
-    def getSpliter(self,
-                   textSplit,
-                   fileName,
-                   autoSpliter=False,
-                   chunk_size=500,
-                   chunk_overlap=0
-                   ):
+    def getSpliter(self, textSplit, fileName, autoSpliter=False, chunk_size=500, chunk_overlap=0):
         self.checkClient()
         if textSplit is not None:
             return textSplit
@@ -504,19 +478,10 @@ class EmbeddingHelper(nn.Module):
             self.embedding_model = self.getEmbeddingModel(model_type=model_type)
         return self.embedding_model([text])
 
-    def getEmbeddingModel(self,
-                          model_type,
-                          OPENAI_API_KEY=None,
-                          OPENAI_API_BASE_PATH=None,
-                          Cohere_API_KEY=None,
-                          Sentence_Transformersmodel_name=None,
-                          Cohere_model_name=None,
-                          Instructor_model_name=None,
-                          Google_api_key=None,
-                          Google_model_name=None,
-                          HuggingFace_api_key=None,
-                          HuggingFace_model_name=None
-                          ):
+    def getEmbeddingModel(self, model_type, OPENAI_API_KEY=None, OPENAI_API_BASE_PATH=None, Cohere_API_KEY=None,
+                          Sentence_Transformersmodel_name=None, Cohere_model_name=None, Instructor_model_name=None,
+                          Google_api_key=None, Google_model_name=None, HuggingFace_api_key=None,
+                          HuggingFace_model_name=None):
         """
         model_type:
         [ default,
@@ -575,3 +540,156 @@ class EmbeddingHelper(nn.Module):
     def cahing_finished_callback(self, future):
         self.my_property = future.result()
         print("Long running task finished.")
+
+
+@singleton
+class LangChainEmbeddingHelper:
+    def __init__(self):
+        # Map{dbId, db}
+        self.dbMap = {}
+
+    def from_documents(self, documents: list[Document], dbId: str, embedding=OpenAIEmbeddings(),
+                       persist_directory: str = None):
+        if persist_directory is None:
+            persist_directory = "./embedding" + dbId
+        db = Chroma.from_documents(documents, embedding=embedding, persist_directory=persist_directory)
+        self.dbMap[dbId] = db
+
+    def from_texts(self, texts: list[str], dbId: str, embedding=OpenAIEmbeddings(), persist_directory: str = None):
+        if persist_directory is None:
+            persist_directory = "./embedding" + dbId
+        db = Chroma.from_texts(texts, embedding=embedding, persist_directory=persist_directory)
+        self.dbMap[dbId] = db
+
+    def similarity_search(self, query: str, fileID: str, topK: int = 4) -> list[str]:
+        db = self.dbMap[fileID]
+        docs = db.similarity_search(query, k=topK)
+        texts = []
+        for doc in docs:
+            texts.append(doc.page_content)
+        return texts
+
+
+@singleton
+class SummaryEmbeddingHelper:
+
+    openaiAccessRate = 0
+
+    def __init__(self, embedding_function: Optional[str] = None):
+        import chromadb
+        import streamlit as st
+
+        self.client = chromadb.PersistentClient(path="./embedding")
+
+        self.generated_ids = set()
+
+        # Map{collectionId, collection}
+        self.collectionMap = {}
+
+        # Map{collectionID, idIndex}
+        self.idIndexMap = {}
+
+        self.api_key = st.session_state["openai_api_key"]
+        self.chatModel = ChatOpenAI(openai_api_key=self.api_key)
+
+        if embedding_function is None:
+            self.embedding_model = embedding_functions.DefaultEmbeddingFunction()
+        elif embedding_function == "openai":
+            self.embedding_model = embedding_functions.OpenAIEmbeddingFunction(api_key=self.api_key)
+
+        self.summaryPromptChinese = "请你对下面的段落进行总结,使用中文进行总结,具体的段落内容如下: {}"
+        self.summaryPromptEnglish = "Please summarize the following paragraph in English, the specific content of the " \
+                                    "paragraph is as follows: {}"
+
+    def from_documents(self, documents: list[Document], collectionId: Optional[str], embedding: Optional = OpenAIEmbeddings(),
+                       persist_directory: Optional[str] = None) -> str:
+        if collectionId is None:
+            collectionId = self.generated_id()
+        collection = self.client.get_or_create_collection(collectionId)
+        idIndex = 0
+
+        texts = []
+        ids = []
+        embeddings = []
+        for document in documents:
+            text = document.page_content
+            texts.append(text)
+            embeddings.append(self.summaryEmbedding(text))
+            ids.append("id" + str(idIndex))
+            idIndex += 1
+
+        collection.add(
+            documents=texts,
+            embeddings=embeddings,
+            # metadatas=[{"source": "notion"}, {"source": "google-docs"}],  # filter on these!
+            ids=ids,
+        )
+
+        self.collectionMap[collectionId] = collection
+        self.idIndexMap[collectionId] = idIndex
+        return collectionId
+
+    def from_texts(self, texts: list[str], collectionId: Optional[str] = None, embedding: Optional = OpenAIEmbeddings(),
+                   persist_directory: Optional[str] = None) -> str:
+        if collectionId is None:
+            collectionId = self.generated_id()
+        collection = self.client.get_or_create_collection(collectionId)
+        idIndex = 0
+
+        ids = []
+        embeddings = []
+        for text in texts:
+            embeddings.append(self.summaryEmbedding(text))
+            ids.append("id" + str(idIndex))
+            idIndex += 1
+
+        collection.add(
+            documents=texts,
+            embeddings=embeddings,
+            # metadatas=[{"source": "notion"}, {"source": "google-docs"}],  # filter on these!
+            ids=ids,  # unique for each doc
+        )
+
+        self.collectionMap[collectionId] = collection
+        self.idIndexMap[collectionId] = idIndex
+        return collectionId
+
+    def similarity_search(self, query: str, collectionId: str, topK: int = 4) -> list[str]:
+        if collectionId not in self.collectionMap.keys():
+            return []
+
+        collection = self.collectionMap[collectionId]
+
+        texts = collection.query(
+            query_texts=[query],
+            n_results=topK,
+        )
+        return texts["documents"][0]
+
+    def summaryEmbedding(self, content: str):
+        limit_access = st.session_state["openai_limit_access"]
+        if not limit_access:
+            res = self.chatModel.invoke(self.summaryPromptEnglish.format(content))
+            embedding = self.embedding_model([res.content])
+        else:
+            self.openaiAccessRate += 2
+            if self.openaiAccessRate >= 3:
+                time.sleep(20)
+                res = self.chatModel.invoke(self.summaryPromptEnglish.format(content))
+                embedding = self.embedding_model([res.content])
+                self.openaiAccessRate %= 3
+            else:
+                res = self.chatModel.invoke(self.summaryPromptEnglish.format(content))
+                embedding = self.embedding_model([res.content])
+        return embedding[0]
+
+    def generated_id(self) -> str:
+        characters = string.ascii_letters + string.digits
+
+        while True:
+            idt = ''.join(random.choice(characters) for _ in range(13))
+            if idt not in self.generated_ids:
+                self.generated_ids.add(idt)
+                break
+        return idt
+
