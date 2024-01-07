@@ -39,8 +39,9 @@ def file_chat(fileId: Optional[str], fileGPT: Optional[FileGPT] = None):
         st.session_state.messages.append({"role": "assistant", "content": full_response})
 
 
-def sql_chat(fbId: Optional[str], sqlGPT: Optional[SqlGPT] = None):
+def sql_chat(dbId: Optional[str], sqlGPT: Optional[SqlGPT] = None):
     if sqlGPT is None:
+        sqlUrl = st.session_state["openai_model"]
         sqlGPT = SqlGPT()
 
     if "openai_model" not in st.session_state:

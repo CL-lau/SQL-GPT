@@ -13,9 +13,6 @@ from embedding.embeddingHelper import SummaryEmbeddingHelper
 import logging
 import re
 
-from gpt.chat import ChatGPT
-from sql.SQL_operator import SQL_operator
-
 from sql.SQLOperator import SQLHelper
 from sql.SQL_type import get_db_operation_class, SQL_class
 from sql.orm import orm
