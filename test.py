@@ -25,17 +25,16 @@
 import subprocess
 import sys
 
-# import pymysql
-# import pandas as pd
-# db = pymysql.connect(host='localhost', port=3306, user="root", password="root", database='differ')
-# cursor = db.cursor()
-# sql = "SELECT * FROM change_dto"  # 替换为你的SQL语句
-# cursor.execute(sql)
-# results = cursor.fetchall()
-# cursor.close()
-# db.close()
-# dataframe = pd.DataFrame(results, columns=[i[0] for i in cursor.description])  # 根据你的列名进行修改
-# print(dataframe.head())
+import pymysql
+import pandas as pd
+db = pymysql.connect(host='localhost', port=3306, user="root", password="root", database='differ')
+cursor = db.cursor()
+sql = "SELECT * FROM change_dto"  # 替换为你的SQL语句
+cursor.execute(sql)
+results = cursor.fetchall()
+cursor.close()
+db.close()
+dataframe = pd.DataFrame(results, columns=[i[0] for i in cursor.description])  # 根据你的列名进行修改
+print(dataframe.head())
 
 
-subprocess.run(['streamlit', 'run', "C:\\Users\\liuc8\\Desktop\\project\\SQL-GPT\\app.py"] + sys.argv[1:])
