@@ -1,8 +1,8 @@
-import os
+import subprocess
+import sys
 from typing import Optional
 
 import streamlit as st
-from langchain.llms import OpenAI
 
 from components import upload_and_process_document
 from gpt.llm import FileGPT, SqlGPT
@@ -98,3 +98,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

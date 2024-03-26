@@ -4,9 +4,9 @@ import os
 from typing import Optional
 
 import openai
-import torch
-import torch.nn as nn
 import tiktoken
+import torch.nn as nn
+
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(module)s - %(message)s', level=logging.INFO)
 
 

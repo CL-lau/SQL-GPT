@@ -1,8 +1,10 @@
 import os
 from abc import ABC, abstractmethod
+from typing import Any, List, Generator
 
 import openai
 import streamlit as st
+from openai.openai_object import OpenAIObject
 
 
 class ApiKey(ABC):
@@ -17,7 +19,7 @@ class ApiKey(ABC):
 
 class OpenAiAPI(ApiKey):
     @classmethod
-    def is_valid(cls) -> str:
+    def is_valid(cls) -> Any | None:
         if not st.session_state['openai_api_key']:
             st.error('⚠️ :red[You have not pass OpenAI API key.] Use default model')
             return

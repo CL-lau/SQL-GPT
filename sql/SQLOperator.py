@@ -7,14 +7,12 @@ import string
 import time
 from typing import Optional, Any
 
-import torch
+import pandas as pd
+import pymysql
 import torch.nn as nn
 from sqlalchemy import create_engine, text, inspect, MetaData, Table
 
 from sql.SQL_type import get_db_operation_class, SQL_class
-
-import pymysql
-import pandas as pd
 
 
 def singleton(cls):

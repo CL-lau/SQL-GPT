@@ -1,18 +1,13 @@
-from langchain.vectorstores import Chroma
-from langchain_core.documents import Document
-from langchain_core.prompts import PromptTemplate
-
+import re
 from typing import Optional
 
 import streamlit as st
 from langchain.llms import OpenAI
 from langchain_community.chat_models import ChatOpenAI
+from langchain_core.documents import Document
+from langchain_core.prompts import PromptTemplate
 
 from embedding.embeddingHelper import SummaryEmbeddingHelper
-
-import logging
-import re
-
 from sql.SQLOperator import SQLHelper
 from sql.SQL_type import get_db_operation_class, SQL_class
 from sql.orm import orm
